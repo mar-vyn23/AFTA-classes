@@ -4,9 +4,9 @@ import streamlit as st
 import pandas as pd
 import requests
 import os
+from io import StringIO
 
 API_URL = "https://school-loan-backend.onrender.com"
-#API_URL = "http://127.0.0.1:8000"
 
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -58,7 +58,7 @@ if menu == "Register Savings Plan":
             if res.status_code == 200:
                 st.success(res.json()["message"])
             else:
-                st.error(res.json().get("detail", "Error saving data."))
+                st.error(res.json().get("detail"))
 
 elif menu == "Check Loan Eligibility":
     st.subheader("💳 Check Loan Eligibility")
@@ -66,34 +66,28 @@ elif menu == "Check Loan Eligibility":
 
     if st.button("Get Loan Info"):
         if user_id:
-            try:
-                res = requests.post(f"{API_URL}/loan", json={"user_id": user_id})
-                if res.status_code == 200:
-                    data = res.json()
-                    st.success(f"Months Saved: {data['months_saved']}")
-                    st.info(f"Total Saved: UGX {data['total_saved']:,.0f}")
-                    st.success(f"Loan Eligible: UGX {data['loan_eligible_amount']:,.0f}")
-                else:
-                    try:
-                        st.error(res.json().get("detail", "Error checking loan."))
-                    except Exception:
-                        st.error(f"Server error: {res.status_code}")
-            except requests.exceptions.RequestException as e:
-                st.error(f"Connection error: {e}")
+            res = requests.post(f"{API_URL}/loan", json={"user_id": user_id})
+            if res.status_code == 200:
+                data = res.json()
+                st.success(f"Months Saved: {data['months_saved']}")
+                st.info(f"Total Saved: UGX {data['total_saved']:,.0f}")
+                st.success(f"Loan Eligible: UGX {data['loan_eligible_amount']:,.0f}")
+            else:
+                st.error(res.json().get("detail"))
 
 elif menu == "Download / Upload CSV":
     st.subheader("📁 Current Savings Data")
+    if os.path.exists(CSV_FILE):
+        df = pd.read_csv(CSV_FILE)
+        st.dataframe(df)
 
-    try:
-        res = requests.get(f"{API_URL}/csv")
-        if res.status_code == 200:
-            df = pd.read_csv(StringIO(res.text))
-            st.dataframe(df)
+        csv = df.to_csv(index=False).encode('utf-8')
+        st.download_button("📤 Download CSV", data=csv, file_name="savings.csv", mime='text/csv')
 
-            csv = df.to_csv(index=False).encode('utf-8')
-            st.download_button("📤 Download CSV", data=res.content, file_name="savings.csv", mime='text/csv')
-        else:
-            st.warning("Unable to fetch CSV from backend.")
-    except Exception as e:
-        st.error(f"Error fetching CSV: {e}")
-
+        uploaded_file = st.file_uploader("🔄 Upload updated CSV", type="csv")
+        if uploaded_file:
+            df_new = pd.read_csv(uploaded_file)
+            df_new.to_csv(CSV_FILE, index=False)
+            st.success("Uploaded and replaced savings file.")
+    else:
+        st.warning("CSV file not found.")

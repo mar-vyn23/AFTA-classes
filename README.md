@@ -2,6 +2,8 @@
 
 This is a simple School Loan Calculator web application for schools, designed to encourage saving and support loan issuance based on how much a user has saved. It consists of a **FastAPI** backend and a **Streamlit** frontend. A shared CSV file is used to store data, making the system easy to use and maintain.
 
+🔗 **Try it out here:** [https://school-cal.streamlit.app/](https://school-cal.streamlit.app/)
+
 ---
 
 ## 📌 Features
