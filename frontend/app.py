@@ -6,8 +6,8 @@ import requests
 import os
 from io import StringIO
 
-API_URL = "https://school-loan-backend.onrender.com"
-#API_URL = "http://127.0.0.1:8000"
+#API_URL = "https://school-loan-backend.onrender.com"
+API_URL = "http://127.0.0.1:8000"
 
 #BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 #CSV_FILE = os.path.join(BASE_DIR, "../shared_data/savings.csv")
@@ -86,7 +86,11 @@ elif menu == "Check Loan Eligibility":
                 st.info(f"Total Saved: UGX {data['total_saved']:,.0f}")
                 st.success(f"Loan Eligible: UGX {data['loan_eligible_amount']:,.0f}")
             else:
-                st.error(res.json().get("detail"))
+                try:
+                    error_detail = res.json().get("detail", "Unknown error")
+                except ValueError:
+                    error_detail = res.text or "An unexpected error occurred"
+                st.error(error_detail)
 
 elif menu == "Download / Upload CSV":
     st.subheader("📁 Current Savings Data")

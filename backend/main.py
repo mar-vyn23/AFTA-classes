@@ -32,8 +32,10 @@ def save_monthly_plan(data: MonthlySavingsRequest):
     df = pd.read_csv(CSV_FILE)
 
     user_id = data.user_id.strip().lower()
-    if data.user_id.strip() in df["user_id"].astype(str).str.strip().values:
-        raise HTTPException(status_code = 400, detail= "User already registered.")
+    df["user_id"] = df["user_id"].astype(str).str.strip().str.lower()
+
+    if user_id in df["user_id"].values:
+        raise HTTPException(status_code=400, detail="User already registered.")
     
     new_entry = pd.DataFrame([{
         "user_id": data.user_id.strip(),
@@ -94,8 +96,27 @@ async def upload_csv(file: UploadFile = File(...)):
     
     contents = await file.read()
     try:
-        df = pd.read_csv(StringIO(contents.decode("utf-8")))
-        df.to_csv(CSV_FILE, index=False)
+        new_df = pd.read_csv(StringIO(contents.decode("utf-8")))
+
+        # Ensuring required columns exist
+        required_columns = {"user_id", "monthly_saving", "start_date"}
+        if not required_columns.issubset(new_df.columns):
+            raise HTTPException(status_code=400, detail=f"CSV must include columns: {required_columns}")
+
+        # Parsing and cleaning start_date
+        new_df["start_date"] = pd.to_datetime(new_df["start_date"], errors="coerce")
+        new_df = new_df.dropna(subset=["start_date"])
+        new_df["start_date"] = new_df["start_date"].dt.strftime('%Y-%m-%d')
+
+        # Lowercase and strip user_ids
+        new_df["user_id"] = new_df["user_id"].astype(str).str.strip().str.lower()
+
+        # Checking for duplicates within the uploaded file
+        if new_df["user_id"].duplicated().any():
+            raise HTTPException(status_code=400, detail="Uploaded CSV contains duplicate user IDs.")
+        
+        # Saving to CSV
+        new_df.to_csv(CSV_FILE, index=False)
         return {"message": "CSV uploaded and saved successfully."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing CSV: {e}")
