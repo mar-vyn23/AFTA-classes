@@ -7,7 +7,7 @@ import os
 from io import StringIO
 
 API_URL = "https://school-loan-backend.onrender.com"
-
+#API_URL = "http://127.0.0.1:8000"
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 CSV_FILE = os.path.join(BASE_DIR, "../shared_data/savings.csv")
