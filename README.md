@@ -12,5 +12,22 @@ This is a simple School Loan Calculator web application for schools, designed to
 - Automatically records the start date of savings.
 - Calculates the number of months a user has saved based on the start date.
 - Determines loan eligibility (Loan = 2 × Total Saved).
-- Allows downloading and editing the savings CSV file.
+- Prevents duplicate user IDs when registering new savings.
+- Allows uploading a new CSV file to update savings data.
+- Enables downloading of the current CSV file for offline editing.
+- Interactive dashboard with:
+  - Total users
+  - Total monthly savings
+  - Average saving per user
+  - Bar chart of monthly savings by user
+
+---
+
+## ⚙️ Tech Stack
+
+- **Frontend:** Streamlit
+- **Backend:** FastAPI
+- **Data Storage:** CSV file (read/write from backend)
+
+---
 
