@@ -9,22 +9,35 @@ from io import StringIO
 API_URL = "https://school-loan-backend.onrender.com"
 #API_URL = "http://127.0.0.1:8000"
 
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-CSV_FILE = os.path.join(BASE_DIR, "../shared_data/savings.csv")
+#BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+#CSV_FILE = os.path.join(BASE_DIR, "../shared_data/savings.csv")
 
 st.set_page_config(page_title="School Loan System")
 st.title("🏫 School Loan Calculator")
 
 menu = st.sidebar.radio("📂 Menu", ["Dashboard", "Register Savings Plan", "Check Loan Eligibility", "Download / Upload CSV"])
 
-def load_data():
-    if os.path.exists(CSV_FILE):
-        return pd.read_csv(CSV_FILE)
-    return pd.DataFrame(columns=["user_id", "monthly_saving", "start_date"])
+#def load_data():
+#    if os.path.exists(CSV_FILE):
+#        return pd.read_csv(CSV_FILE)
+#    return pd.DataFrame(columns=["user_id", "monthly_saving", "start_date"])
+
+# Loading remote CSV from backend
+def fetch_remote_csv():
+    try:
+        res = requests.get(f"{API_URL}/csv")
+        if res.status_code == 200:
+            return pd.read_csv(StringIO(res.text))
+        else:
+            st.error("Failed to fetch data from backend.")
+            return pd.DataFrame()
+    except Exception as e:
+        st.error(f"Error fetching CSV: {e}")
+        return pd.DataFrame()
 
 if menu == "Dashboard":
-    st.subheader("📊 Dashboard Overview")
-    df = load_data()
+    st.subheader("📊 Dashboard")
+    df = fetch_remote_csv()
 
     if df.empty:
         st.warning("No savings data found.")
@@ -77,17 +90,23 @@ elif menu == "Check Loan Eligibility":
 
 elif menu == "Download / Upload CSV":
     st.subheader("📁 Current Savings Data")
-    if os.path.exists(CSV_FILE):
-        df = pd.read_csv(CSV_FILE)
+    
+    df = fetch_remote_csv()
+    if df.empty:
+        st.warning("No data available.")
+    else:
         st.dataframe(df)
 
-        csv = df.to_csv(index=False).encode('utf-8')
-        st.download_button("📤 Download CSV", data=csv, file_name="savings.csv", mime='text/csv')
+        csv = df.to_csv(index=False).encode("utf-8")
+        st.download_button("📤 Download CSV", data=csv, file_name="savings.csv", mime="text/csv")
 
-        uploaded_file = st.file_uploader("🔄 Upload updated CSV", type="csv")
-        if uploaded_file:
+    uploaded_file = st.file_uploader("🔄 Upload new CSV", type="csv")
+    if uploaded_file:
+        try:
             df_new = pd.read_csv(uploaded_file)
-            df_new.to_csv(CSV_FILE, index=False)
-            st.success("Uploaded and replaced savings file.")
-    else:
-        st.warning("CSV file not found.")
+            # You may POST it to backend (if backend supports upload)
+            # For now, just display confirmation
+            st.success("CSV uploaded and parsed successfully. Backend update not implemented.")
+            st.dataframe(df_new)
+        except Exception as e:
+            st.error(f"Error reading uploaded file: {e}")
