@@ -91,22 +91,28 @@ elif menu == "Check Loan Eligibility":
 elif menu == "Download / Upload CSV":
     st.subheader("📁 Current Savings Data")
     
-    df = fetch_remote_csv()
-    if df.empty:
-        st.warning("No data available.")
-    else:
-        st.dataframe(df)
+    try:
+        res = requests.get(f"{API_URL}/csv")
+        if res.status_code == 200:
+            df = pd.read_csv(StringIO(res.text))
+            st.dataframe(df)
 
-        csv = df.to_csv(index=False).encode("utf-8")
-        st.download_button("📤 Download CSV", data=csv, file_name="savings.csv", mime="text/csv")
+            st.download_button("📤 Download CSV", data=res.content, file_name="savings.csv", mime='text/csv')
+        else:
+            st.warning("Unable to fetch CSV from backend.")
+    except Exception as e:
+        st.error(f"Error fetching CSV: {e}")
 
-    uploaded_file = st.file_uploader("🔄 Upload new CSV", type="csv")
+    # Upload new CSV to remote backend
+    uploaded_file = st.file_uploader("🔄 Upload updated CSV", type="csv")
     if uploaded_file:
         try:
-            df_new = pd.read_csv(uploaded_file)
-            # You may POST it to backend (if backend supports upload)
-            # For now, just display confirmation
-            st.success("CSV uploaded and parsed successfully. Backend update not implemented.")
-            st.dataframe(df_new)
+            files = {"file": (uploaded_file.name, uploaded_file.getvalue(), "text/csv")}
+            res = requests.post(f"{API_URL}/upload_csv", files=files)
+            if res.status_code == 200:
+                st.success("CSV uploaded and replaced on backend.")
+                st.rerun()
+            else:
+                st.error(res.json().get("detail", "Upload failed."))
         except Exception as e:
-            st.error(f"Error reading uploaded file: {e}")
+            st.error(f"Error uploading CSV: {e}")

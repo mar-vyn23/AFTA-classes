@@ -1,12 +1,15 @@
 from fastapi import FastAPI, HTTPException, Response
+from fastapi import UploadFile, File
 from pydantic import BaseModel
 from datetime import datetime
+from io import StringIO
 import pandas as pd
 import os
 
 app = FastAPI()
 
-SHARED_DIR = os.path.join(os.path.dirname(__file__), "../shared_data")
+#SHARED_DIR = os.path.join(os.path.dirname(__file__), "../shared_data")
+SHARED_DIR = "/tmp"
 os.makedirs(SHARED_DIR, exist_ok=True)
 CSV_FILE = os.path.join(SHARED_DIR, "savings.csv")
 
@@ -84,4 +87,15 @@ def get_csv():
 
     return Response(content=content, media_type="text/csv")
 
-#great
+@app.post("/upload_csv")
+async def upload_csv(file: UploadFile = File(...)):
+    if file.content_type != "text/csv":
+        raise HTTPException(status_code=400, detail="Only CSV files are allowed.")
+    
+    contents = await file.read()
+    try:
+        df = pd.read_csv(StringIO(contents.decode("utf-8")))
+        df.to_csv(CSV_FILE, index=False)
+        return {"message": "CSV uploaded and saved successfully."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing CSV: {e}")
