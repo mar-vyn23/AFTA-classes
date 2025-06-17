@@ -8,7 +8,6 @@ import os
 
 app = FastAPI()
 
-#SHARED_DIR = os.path.join(os.path.dirname(__file__), "../shared_data")
 SHARED_DIR = "/tmp"
 os.makedirs(SHARED_DIR, exist_ok=True)
 CSV_FILE = os.path.join(SHARED_DIR, "savings.csv")

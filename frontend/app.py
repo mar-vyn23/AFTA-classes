@@ -6,23 +6,20 @@ import requests
 import os
 from io import StringIO
 
+#live link to the backend
 API_URL = "https://school-loan-backend.onrender.com"
 #API_URL = "http://127.0.0.1:8000"
 
-#BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-#CSV_FILE = os.path.join(BASE_DIR, "../shared_data/savings.csv")
-
+#streamlit app title
 st.set_page_config(page_title="School Loan System")
+
+#page title
 st.title("🏫 School Loan Calculator")
 
+#defining dise menu items
 menu = st.sidebar.radio("📂 Menu", ["Dashboard", "Register Savings Plan", "Check Loan Eligibility", "Download / Upload CSV"])
 
-#def load_data():
-#    if os.path.exists(CSV_FILE):
-#        return pd.read_csv(CSV_FILE)
-#    return pd.DataFrame(columns=["user_id", "monthly_saving", "start_date"])
-
-# Loading remote CSV from backend
+# Loading CSV from backend
 def fetch_remote_csv():
     try:
         res = requests.get(f"{API_URL}/csv")
@@ -35,6 +32,7 @@ def fetch_remote_csv():
         st.error(f"Error fetching CSV: {e}")
         return pd.DataFrame()
 
+#defining dashboard elements
 if menu == "Dashboard":
     st.subheader("📊 Dashboard")
     df = fetch_remote_csv()
@@ -51,18 +49,22 @@ if menu == "Dashboard":
         col2.metric("💰 Total Monthly Savings", f"UGX {total_savings:,.0f}")
         col3.metric("📈 Average Saving", f"UGX {avg_saving:,.0f}")
 
+        #returning all the savings records
         st.markdown("### 🧾 All Savings Records")
         st.dataframe(df)
 
+        #ploting bar graph
         st.markdown("### 📉 Savings Distribution")
         fig = px.bar(df, x="user_id", y="monthly_saving", title="Monthly Savings by User", text_auto=True)
         st.plotly_chart(fig, use_container_width=True)
 
+#register menu to allow registration of new users and their monthly plans
 if menu == "Register Savings Plan":
     st.subheader("📅 Enter Monthly Savings")
     user_id = st.text_input("User ID").strip().lower()
     monthly = st.number_input("Monthly Saving (UGX)", step=1000.0)
 
+    #saving registered user to the csv file
     if st.button("Save"):
             res = requests.post(f"{API_URL}/save", json={
                 "user_id": user_id,
@@ -73,6 +75,7 @@ if menu == "Register Savings Plan":
             else:
                 st.error(res.json().get("detail"))
 
+#checking for loan eligibility
 elif menu == "Check Loan Eligibility":
     st.subheader("💳 Check Loan Eligibility")
     user_id = st.text_input("User ID").strip().lower()
@@ -92,6 +95,7 @@ elif menu == "Check Loan Eligibility":
                     error_detail = res.text or "An unexpected error occurred"
                 st.error(error_detail)
 
+#downloading and uploading the csv file
 elif menu == "Download / Upload CSV":
     st.subheader("📁 Current Savings Data")
     
