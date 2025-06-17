@@ -1,3 +1,4 @@
+from dotenv import load_dotenv
 import plotly.express as px
 from io import StringIO
 import streamlit as st
@@ -6,9 +7,13 @@ import requests
 import os
 from io import StringIO
 
-#live link to the backend
-API_URL = "https://school-loan-backend.onrender.com"
-#API_URL = "http://127.0.0.1:8000"
+load_dotenv()
+
+API_URL = os.getenv("API_URL")
+
+#live link to the backend & localhost
+API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")
+
 
 #streamlit app title
 st.set_page_config(page_title="School Loan System")
