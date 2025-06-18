@@ -67,7 +67,7 @@ if menu == "Dashboard":
 if menu == "Register Savings Plan":
     st.subheader("📅 Enter Monthly Savings")
     user_id = st.text_input("User ID").strip().lower()
-    monthly = st.number_input("Monthly Saving (UGX)", step=1000.0)
+    monthly = st.number_input("Monthly Saving (UGX)", step=50000)
 
     #saving registered user to the csv file
     if st.button("Save"):
