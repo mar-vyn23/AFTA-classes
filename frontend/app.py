@@ -12,7 +12,7 @@ load_dotenv()
 API_URL = os.getenv("API_URL")
 
 #live link to the backend & localhost
-API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")
+API_URL = os.getenv("API_URL")
 
 
 #streamlit app title
