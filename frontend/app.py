@@ -9,10 +9,12 @@ from io import StringIO
 
 load_dotenv()
 
-API_URL = os.getenv("API_URL")
-
-#live link to the backend & localhost
-API_URL = os.getenv("API_URL")
+try:
+    # Streamlit Cloud will populate st.secrets
+    API_URL = st.secrets["API_URL"]
+except Exception:
+    # Fallback for local development using .env
+    API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")
 
 
 #streamlit app title
